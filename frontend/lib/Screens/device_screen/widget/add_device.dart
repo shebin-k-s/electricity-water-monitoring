@@ -3,6 +3,8 @@ import 'package:saron/api/data/device.dart';
 import 'package:saron/widgets/snackbar_message/snackbar_message.dart';
 
 class AddDevice extends StatefulWidget {
+  const AddDevice({super.key});
+
   @override
   _AddDeviceState createState() => _AddDeviceState();
 }
@@ -15,6 +17,7 @@ class _AddDeviceState extends State<AddDevice> {
 
   final FocusNode _serialNumberFocus = FocusNode();
   final FocusNode _deviceIdFocus = FocusNode();
+  bool isLoading = false;
 
   @override
   void dispose() {
@@ -201,55 +204,67 @@ class _AddDeviceState extends State<AddDevice> {
   }
 
   Widget _buildButtons(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+    return isLoading
+        ? const Center(
+          child: SizedBox(
+              width: 50,
+              height: 50,
+              child: CircularProgressIndicator(
               ),
             ),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(
-                color: Color(0xFF6A1B9A),
-                fontSize: 16,
+        )
+        : Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: Color(0xFF6A1B9A),
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () => _addDevice(context),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6A1B9A),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => _addDevice(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6A1B9A),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Add',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
               ),
-            ),
-            child: const Text(
-              'Add',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+            ],
+          );
   }
 
   void _addDevice(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       FocusScope.of(context).unfocus();
+      setState(() {
+        isLoading = true;
+      });
 
       String serialNumber = serialNumberController.text;
       String deviceId = deviceIdController.text;
@@ -269,6 +284,9 @@ class _AddDeviceState extends State<AddDevice> {
       } else {
         _errorMessage.value = "Internal server error";
       }
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 }

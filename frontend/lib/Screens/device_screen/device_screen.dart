@@ -135,7 +135,7 @@ class DeviceScreen extends StatelessWidget {
                                         '${deviceList.value[index].deviceId}',
                                     serialNumber:
                                         '${deviceList.value[index].serialNumber}',
-                                    connected: _isConnected!,
+                                    connected: _isConnected,
                                   );
                                 },
                               ),
@@ -188,7 +188,7 @@ class DeviceScreen extends StatelessWidget {
                           deviceList.value = await loadDeviceList();
                           _isLoading.value = false;
                           List<int> deviceIds = deviceList.value
-                              .map((device) => device.deviceId!)
+                              .map((device) => device.deviceId)
                               .toList();
                           socketManager.emitEvent('setDevices', deviceIds);
                         }
