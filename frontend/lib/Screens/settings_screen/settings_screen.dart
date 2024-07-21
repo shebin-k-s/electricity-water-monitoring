@@ -5,6 +5,7 @@ import 'package:saron/Screens/auth_screen/forgetpassword_screen.dart';
 import 'package:saron/Screens/settings_screen/widgets/custom_container.dart';
 import 'package:saron/Screens/settings_screen/widgets/delete_confirmation.dart';
 import 'package:saron/Screens/support_screen/support_screen.dart';
+import 'package:saron/api/load_data/load_devices.dart';
 import 'package:saron/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -20,22 +21,25 @@ class SettingsScreen extends StatelessWidget {
           child: Column(
             children: [
               CustomContainer(
-                  leadingIcon: Icons.person,
-                  title: "Account Details",
-                  trailingIcon: Icons.keyboard_arrow_right,
-                  onPress: () async {
-                    final _sharedPref = await SharedPreferences.getInstance();
-                    final _email = _sharedPref.getString(EMAIL);
-                    final _username = _sharedPref.getString(USERNAME);
-
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                          builder: (ctx) => AccountDetailsScreen(
-                                email: _email!,
-                                name: _username!,
-                              )),
-                    );
-                  }),
+                leadingIcon: Icons.person,
+                title: "Account Details",
+                trailingIcon: Icons.keyboard_arrow_right,
+                onPress: () async {
+                  final sharedPref = await SharedPreferences.getInstance();
+                  final email = sharedPref.getString(EMAIL);
+                  final username = sharedPref.getString(USERNAME);
+                  final device = await loadDeviceList();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (ctx) => AccountDetailsScreen(
+                        email: email!,
+                        name: username!,
+                        devices: device,
+                      ),
+                    ),
+                  );
+                },
+              ),
               SizedBox(
                 height: 30,
               ),
@@ -43,9 +47,9 @@ class SettingsScreen extends StatelessWidget {
                 leadingIcon: Icons.logout,
                 title: "Logout",
                 onPress: () async {
-                  final SharedPreferences _sharedPref =
+                  final SharedPreferences sharedPref =
                       await SharedPreferences.getInstance();
-                  await _sharedPref.clear();
+                  await sharedPref.clear();
                   Navigator.of(context).pushAndRemoveUntil(
                     MaterialPageRoute(
                       builder: (ctx) => AuthScreen(),
@@ -71,12 +75,12 @@ class SettingsScreen extends StatelessWidget {
                 leadingIcon: Icons.lock,
                 title: "Reset Password",
                 onPress: () async {
-                  final _sharedPref = await SharedPreferences.getInstance();
-                  final _email = _sharedPref.getString(EMAIL);
+                  final sharedPref = await SharedPreferences.getInstance();
+                  final email = sharedPref.getString(EMAIL);
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (ctx) => ForgetPasswordScreen(
-                        email: _email,
+                        email: email,
                       ),
                     ),
                   );
