@@ -21,8 +21,11 @@ class HomeScreen extends StatelessWidget {
   final ValueNotifier<List<Device>> deviceList = ValueNotifier([]);
   bool _error = false;
 
-  DateTime? _startDate = null;
-  DateTime? _endDate = null;
+  // DateTime? _startDate = null;
+  // DateTime? _endDate = null;
+
+  DateTime? _startDate = DateTime.now();
+  DateTime? _endDate = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
@@ -50,9 +53,9 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(
                       height: 40,
                     ),
-                     Padding(
+                    Padding(
                       padding: const EdgeInsets.only(left: 16, top: 16),
-                      child:  Row(
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
@@ -105,10 +108,11 @@ class HomeScreen extends StatelessWidget {
                                       builder: (context, deviceIndex, child) {
                                         return CustomButton(
                                           btnColor: deviceIndex == index
-                                              ? const Color.fromRGBO(27, 94, 32, 1)
+                                              ? const Color.fromRGBO(
+                                                  27, 94, 32, 1)
                                               : Colors.transparent,
                                           text: device[index]
-                                              .deviceName!
+                                              .deviceName
                                               .toUpperCase(),
                                           onClick: () async {
                                             _error = false;
@@ -122,7 +126,7 @@ class HomeScreen extends StatelessWidget {
                                                         .unitConsumed(
                                                   _startDate.toString(),
                                                   _endDate.toString(),
-                                                  device[index].deviceId!,
+                                                  device[index].deviceId,
                                                 );
                                                 if (unitConsumed < 0) {
                                                   _error = true;
@@ -160,8 +164,10 @@ class HomeScreen extends StatelessWidget {
                 builder: (context, index, child) {
                   if (deviceList.value.isNotEmpty) {
                     return CalendarPicker(
+                        initialStartDate: _startDate,
+                        initialEndDate: _endDate,
                         isLoading: (val) => _isLoading.value = val,
-                        deviceId: deviceList.value[index].deviceId ?? -1,
+                        deviceId: deviceList.value[index].deviceId,
                         onDateChange: (unit, startDate, endDate) {
                           _error = false;
                           _unitConsumed.value = unit;
@@ -176,7 +182,7 @@ class HomeScreen extends StatelessWidget {
                   }
                 },
               ),
-              const SizedBox(height: 50),
+              const SizedBox(height: 30),
               ValueListenableBuilder(
                 valueListenable: _isLoading,
                 builder: (context, value, child) {
@@ -185,77 +191,94 @@ class HomeScreen extends StatelessWidget {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Container(
-                          width: double.infinity,
                           decoration: BoxDecoration(
-                            color: Colors.lime,
-                            // color: Color.fromARGB(255, 255, 204, 107),
+                            color: Colors.grey[300],
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Column(
                             children: [
                               Padding(
                                 padding: const EdgeInsets.all(16),
-                                child: Text(
-                                  "${deviceList.value[_selectedDeviceIndex.value].deviceName!.toUpperCase()} Consumption : ${_unitConsumed.value.toStringAsFixed(2)}",
-                                  style: const TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        "${deviceList.value[_selectedDeviceIndex.value].deviceName.toUpperCase()} Consumption",
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ),
+                                    Text(
+                                      "${_unitConsumed.value.toStringAsFixed(2)} Units",
+                                      style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.green,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
+                              const Divider(thickness: 1, height: 1),
                               Expanded(
-                                child: ListView.separated(
+                                child: ListView.builder(
                                   itemBuilder: (context, index) {
                                     final date =
                                         _startDate!.add(Duration(days: index));
                                     final formattedDate =
-                                        DateFormat('dd-MM-yyyy').format(date);
-                        
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 16),
-                                      child: GestureDetector(
-                                        onTap: () {
-                                          print(_selectedDeviceIndex.value);
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (ctx) => UtilizationList(
-                                                date: date,
-                                                deviceId: deviceList
-                                                        .value[
-                                                            _selectedDeviceIndex
-                                                                .value]
-                                                        .deviceId ??
-                                                    -1,
+                                        DateFormat('EEE, MMM d yyyy')
+                                            .format(date);
+                                    return InkWell(
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute(
+                                            builder: (ctx) => UtilizationList(
+                                              date: date,
+                                              deviceId: deviceList
+                                                  .value[_selectedDeviceIndex
+                                                      .value]
+                                                  .deviceId,
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 12),
+                                        child: Row(
+                                          children: [
+                                            CircleAvatar(
+                                              radius: 24,
+                                              backgroundColor:
+                                                  Colors.purple[100],
+                                              child: Text(
+                                                '${index + 1}',
+                                                style: TextStyle(
+                                                  color: Colors.purple[800],
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                             ),
-                                          );
-                                        },
-                                        child: ListTile(
-                                          title: Text(
-                                            formattedDate,
-                                            style: const TextStyle(
-                                                color: Colors.black,
-                                                fontSize: 18),
-                                          ),
-                                          trailing: const Icon(
-                                            Icons.keyboard_arrow_right,
-                                            color: Colors.red,
-                                            size: 30,
-                                            weight: 20,
-                                          ),
+                                            const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Text(
+                                                formattedDate,
+                                                style: const TextStyle(
+                                                  color: Colors.black87,
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                            Icon(Icons.chevron_right,
+                                                color: Colors.purple[800]),
+                                          ],
                                         ),
-                                      ),
-                                    );
-                                  },
-                                  separatorBuilder: (context, index) {
-                                    return const Padding(
-                                      padding:
-                                          EdgeInsets.symmetric(horizontal: 16),
-                                      child: Divider(
-                                        color: Colors.red,
-                                        thickness: 2,
                                       ),
                                     );
                                   },

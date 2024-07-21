@@ -1,66 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:saron/Screens/home_screen/widget/CalenderBottomSheet.dart';
 import 'package:saron/api/data/utilization.dart';
 import 'package:saron/widgets/custom_button/custom_button.dart';
 import 'package:saron/widgets/snackbar_message/snackbar_message.dart';
 
-class CalendarPicker extends StatefulWidget {
+class CalendarPicker extends StatelessWidget {
   final Function(double, DateTime, DateTime) onDateChange;
   final Function(bool) isLoading;
   final Function(bool) onError;
   final int deviceId;
+  final DateTime? initialStartDate;
+  final DateTime? initialEndDate;
 
-  const CalendarPicker({
+  final ValueNotifier<DateTime?> startDate;
+  final ValueNotifier<DateTime?> endDate;
+
+  CalendarPicker({
     super.key,
     required this.onDateChange,
     required this.isLoading,
     required this.deviceId,
     required this.onError,
-  });
-
-  @override
-  _CalendarPickerState createState() => _CalendarPickerState();
-}
-
-class _CalendarPickerState extends State<CalendarPicker> {
-  DateTime? _startDate;
-  DateTime? _endDate;
-
-  @override
-  void initState() {
-    super.initState();
-    _startDate = null;
-    _endDate = null;
-
-    // _startDate = DateTime.parse("2024-05-01 00:00:00.000");
-    // _endDate = DateTime.parse("2024-05-17 00:00:00.000");
-  }
+    required this.initialStartDate,
+    required this.initialEndDate,
+  })  : startDate = ValueNotifier<DateTime?>(initialStartDate),
+        endDate = ValueNotifier<DateTime?>(initialEndDate);
 
   Future<void> _selectStartDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    CalendarBottomSheet(
       context: context,
-      initialDate: _startDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
+      label: "Select Start Date",
+      initialDate: startDate.value ?? DateTime.now(),
+      onDateSelected: (date) {
+        startDate.value = date;
+      },
     );
-    if (picked != null && picked != _startDate) {
-      setState(() {
-        _startDate = picked;
-      });
-    }
   }
 
   Future<void> _selectEndDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
+    CalendarBottomSheet(
       context: context,
-      initialDate: _endDate ?? DateTime.now(),
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2101),
+      label: "Select End Date",
+      initialDate: endDate.value ?? DateTime.now(),
+      onDateSelected: (date) {
+        endDate.value = date;
+      },
     );
-    if (picked != null && picked != _endDate) {
-      setState(() {
-        _endDate = picked;
-      });
-    }
   }
 
   @override
@@ -73,19 +58,29 @@ class _CalendarPickerState extends State<CalendarPicker> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              CustomButton(
-                btnColor: Colors.transparent,
-                text: _startDate != null
-                    ? '${_startDate?.day}/${_startDate?.month}/${_startDate?.year}'
-                    : 'Start Date',
-                onClick: () => _selectStartDate(context),
+              ValueListenableBuilder(
+                valueListenable: startDate,
+                builder: (context, date, child) {
+                  return CustomButton(
+                    btnColor: Colors.transparent,
+                    text: date != null
+                        ? '${date.day}/${date.month}/${date.year}'
+                        : 'Start Date',
+                    onClick: () => _selectStartDate(context),
+                  );
+                },
               ),
-              CustomButton(
-                btnColor: Colors.transparent,
-                text: _endDate != null
-                    ? '${_endDate?.day}/${_endDate?.month}/${_endDate?.year}'
-                    : 'End Date',
-                onClick: () => _selectEndDate(context),
+              ValueListenableBuilder(
+                valueListenable: endDate,
+                builder: (context, date, child) {
+                  return CustomButton(
+                    btnColor: Colors.transparent,
+                    text: date != null
+                        ? '${date.day}/${date.month}/${date.year}'
+                        : 'End Date',
+                    onClick: () => _selectEndDate(context),
+                  );
+                },
               ),
               CustomButton(
                 btnColor: Colors.transparent,
@@ -100,25 +95,25 @@ class _CalendarPickerState extends State<CalendarPicker> {
   }
 
   void fetchData(BuildContext ctx) async {
-    if (_startDate != null &&
-        _endDate != null &&
-        (_startDate!.isBefore(_endDate!) ||
-            _startDate!.isAtSameMomentAs(_endDate!))) {
-      widget.isLoading(true);
+    if (startDate.value != null &&
+        endDate.value != null &&
+        (startDate.value!.isBefore(endDate.value!) ||
+            startDate.value!.isAtSameMomentAs(endDate.value!))) {
+      isLoading(true);
       UtilizationDB utilizationDB = UtilizationDB();
       try {
         double unitConsumed = await utilizationDB.unitConsumed(
-            _startDate.toString(), _endDate.toString(), widget.deviceId);
+            startDate.value.toString(), endDate.value.toString(), deviceId);
 
         if (unitConsumed < 0) {
-          widget.onError(true);
+          onError(true);
         } else {
-          widget.onDateChange(unitConsumed, _startDate!, _endDate!);
+          onDateChange(unitConsumed, startDate.value!, endDate.value!);
         }
       } catch (e) {
-          widget.onError(true);
+        onError(true);
       } finally {
-        widget.isLoading(false);
+        isLoading(false);
       }
     } else {
       snackbarMessage(ctx, 'Select Proper Date');
