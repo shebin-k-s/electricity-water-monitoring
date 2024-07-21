@@ -3,241 +3,140 @@ import 'package:saron/api/data/auth.dart';
 import 'package:saron/widgets/snackbar_message/snackbar_message.dart';
 
 class ForgetPasswordScreen extends StatelessWidget {
-  final _formKey = GlobalKey<FormState>();
-
-  final String? email;
-
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _tokenController = TextEditingController();
-
-  final ValueNotifier<bool> _emailValidated = ValueNotifier(false);
-  final ValueNotifier<bool> _isLoading = ValueNotifier(false);
-
   ForgetPasswordScreen({Key? key, this.email}) : super(key: key) {
     _emailController.text = email ?? "";
   }
+
+  final String? email;
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _tokenController = TextEditingController();
+  final ValueNotifier<bool> _emailValidated = ValueNotifier(false);
+  final ValueNotifier<bool> _isLoading = ValueNotifier(false);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
-      bottomNavigationBar: const BottomAppBar(
-        color: Colors.black,
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Center(
-          child: SingleChildScrollView(
-            child: Container(
-              padding: EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Color.fromARGB(179, 43, 42, 42),
-                borderRadius: BorderRadius.circular(16.0),
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Center(
-                      child: Text(
-                        "Reset Password",
-                        style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 30,
-                    ),
-                    ValueListenableBuilder(
-                      valueListenable: _emailValidated,
-                      builder: (context, value, child) {
-                        return Column(
-                          children: [
-                            TextFormField(
-                              controller: _emailController,
-                              readOnly: value,
-                              decoration: InputDecoration(
-                                filled: true,
-                                fillColor: Color.fromARGB(179, 82, 82, 82),
-                                label: const Text(
-                                  'Email ID',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                hintStyle: TextStyle(color: Colors.white),
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(16.0),
-                                ),
-                                prefixIcon: const Icon(
-                                  Icons.email,
-                                  color: Colors.white,
-                                ),
-                              ),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const SizedBox(
+                  height: 40,
+                ),
+                const Icon(
+                  Icons.lock_reset,
+                  size: 80,
+                  color: Colors.white,
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Reset Password',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 48),
+                Form(
+                  key: _formKey,
+                  child: ValueListenableBuilder(
+                    valueListenable: _emailValidated,
+                    builder: (context, emailValidated, _) {
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          _buildTextField(
+                            controller: _emailController,
+                            label: 'Email',
+                            icon: Icons.email_outlined,
+                            keyboardType: TextInputType.emailAddress,
+                            readOnly: emailValidated,
+                          ),
+                          const SizedBox(height: 16),
+                          if (emailValidated) ...[
+                            _buildTextField(
+                              controller: _tokenController,
+                              label: 'Token',
+                              icon: Icons.security,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildTextField(
+                              controller: _passwordController,
+                              label: 'New Password',
+                              icon: Icons.lock_outline,
+                              obscureText: true,
+                            ),
+                            const SizedBox(height: 16),
+                            _buildTextField(
+                              controller: _confirmPasswordController,
+                              label: 'Confirm Password',
+                              icon: Icons.lock_outline,
+                              obscureText: true,
                               validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your email';
-                                }
-                                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
-                                    .hasMatch(value)) {
-                                  return 'Please enter a valid email';
+                                if (value != _passwordController.text) {
+                                  return 'Passwords do not match';
                                 }
                                 return null;
                               },
                             ),
-                            if (value) ...[
-                              SizedBox(
-                                height: 30,
-                              ),
-                              TextFormField(
-                                controller: _tokenController,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Color.fromARGB(179, 82, 82, 82),
-                                  label: const Text(
-                                    'Token',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  hintStyle: TextStyle(color: Colors.white),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16.0),
-                                  ),
-                                  prefixIcon: const Icon(
-                                    Icons.security,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'paste the token sent to your Email';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 30),
-                              TextFormField(
-                                controller: _passwordController,
-                                obscureText: true,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Color.fromARGB(179, 82, 82, 82),
-                                  label: const Text(
-                                    'New Password',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  hintStyle: TextStyle(color: Colors.white),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16.0),
-                                  ),
-                                  prefixIcon: const Icon(
-                                    Icons.lock,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter New Password';
-                                  }
-
-                                  return null;
-                                },
-                              ),
-                              SizedBox(height: 30),
-                              TextFormField(
-                                obscureText: true,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: Color.fromARGB(179, 82, 82, 82),
-                                  label: const Text(
-                                    'Confirm Password',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  hintStyle: TextStyle(color: Colors.white),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16.0),
-                                  ),
-                                  prefixIcon: const Icon(
-                                    Icons.lock,
-                                    color: Colors.white,
-                                  ),
-                                  errorStyle: const TextStyle(
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter password';
-                                  }
-                                  if (value != _passwordController.text) {
-                                    return 'Passwords do not match';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ],
-                            SizedBox(
-                              height: 30,
-                            ),
-                            ValueListenableBuilder(
-                              valueListenable: _isLoading,
-                              builder: (context, value, child) {
-                                if (value) {
-                                  return const Column(
-                                    children: [
-                                      CircularProgressIndicator(),
-                                      SizedBox(height: 16),
-                                    ],
-                                  );
-                                } else {
-                                  return const SizedBox.shrink();
-                                }
-                              },
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                resetPassword(context);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16.0),
-                                ),
-                                backgroundColor:
-                                    Color.fromARGB(179, 82, 82, 82),
-                              ),
-                              child: Text(
-                                "SUBMIT",
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ),
                           ],
-                        );
-                      },
-                    )
-                  ],
+                          const SizedBox(height: 32),
+                          ValueListenableBuilder(
+                            valueListenable: _isLoading,
+                            builder: (context, isLoading, _) {
+                              return ElevatedButton(
+                                onPressed: isLoading
+                                    ? null
+                                    : () => resetPassword(context),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.blue,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
+                                  minimumSize: const Size(double.infinity, 50),
+                                ),
+                                child: isLoading
+                                    ? const CircularProgressIndicator(
+                                        color: Colors.white,
+                                      )
+                                    : Text(
+                                        emailValidated
+                                            ? 'RESET PASSWORD'
+                                            : 'SEND TOKEN',
+                                        style: const TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                              );
+                            },
+                          ),
+                        ],
+                      );
+                    },
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ),
@@ -245,43 +144,94 @@ class ForgetPasswordScreen extends StatelessWidget {
     );
   }
 
-  void resetPassword(BuildContext ctx) async {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool obscureText = false,
+    TextInputType? keyboardType,
+    String? Function(String?)? validator,
+    bool readOnly = false,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      readOnly: readOnly,
+      style: const TextStyle(color: Colors.white),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.white70),
+        prefixIcon: Icon(icon, color: Colors.white70),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: const BorderSide(color: Colors.white24),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: const BorderSide(color: Colors.blue),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: const BorderSide(color: Colors.red),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(30),
+          borderSide: const BorderSide(color: Colors.red),
+        ),
+        filled: true,
+        fillColor: Colors.white10,
+      ),
+      validator: validator ??
+          (value) {
+            if (value == null || value.isEmpty) {
+              return 'This field is required';
+            }
+            if (label == 'Email' &&
+                !RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+              return 'Please enter a valid email';
+            }
+            return null;
+          },
+    );
+  }
+
+  void resetPassword(BuildContext context) async {
     if (_formKey.currentState!.validate()) {
       _isLoading.value = true;
 
-      final _email = _emailController.text;
-      final _password = _passwordController.text;
-      final _token = _tokenController.text;
-      var _errorMessage;
+      final email = _emailController.text;
+      final password = _passwordController.text;
+      final token = _tokenController.text;
+      String errorMessage;
 
       if (_emailValidated.value) {
-        final _statusCode =
-            await AuthDB().resetPassword(_email, _token, _password);
-        if (_statusCode == 200) {
-          _errorMessage = "Password Changed successfully";
-          Navigator.of(ctx).pop();
-        } else if (_statusCode == 404) {
-          _errorMessage = "User doesn't exist";
-        } else if (_statusCode == 401) {
-          _errorMessage = "Invalid or Expired Token";
+        final statusCode = await AuthDB().resetPassword(email, token, password);
+        if (statusCode == 200) {
+          errorMessage = "Password changed successfully";
+          Navigator.of(context).pop();
+        } else if (statusCode == 404) {
+          errorMessage = "User doesn't exist";
+        } else if (statusCode == 401) {
+          errorMessage = "Invalid or Expired Token";
         } else {
-          _errorMessage = "Internal server error";
+          errorMessage = "Internal server error";
         }
       } else {
-        final _statusCode = await AuthDB().forgetPassword(_email);
-        if (_statusCode == 200) {
-          _errorMessage = "Reset token sent to your Email";
+        final statusCode = await AuthDB().forgetPassword(email);
+        if (statusCode == 200) {
+          errorMessage = "Reset token sent to your Email";
           _emailValidated.value = true;
-        } else if (_statusCode == 500) {
-          _errorMessage = "Failed to send reset password email";
-        } else if (_statusCode == 404) {
-          _errorMessage = "Email doesn't belongs to any user";
+        } else if (statusCode == 500) {
+          errorMessage = "Failed to send reset password email";
+        } else if (statusCode == 404) {
+          errorMessage = "Email doesn't belong to any user";
         } else {
-          _errorMessage = "Internal server error";
+          errorMessage = "Internal server error";
         }
       }
 
-      snackbarMessage(ctx, _errorMessage);
+      snackbarMessage(context, errorMessage);
       _isLoading.value = false;
     }
   }
