@@ -93,12 +93,13 @@ class SettingsScreen extends StatelessWidget {
                 leadingIcon: Icons.delete,
                 title: "Delete Account",
                 color: Colors.red,
-                onPress: () => showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return DeleteConfirmation();
-                  },
-                ),
+                onPress: () => DeleteConfirmation.show(context),
+                // onPress: () => showModalBottomSheet(
+                //   context: context,
+                //   builder: (BuildContext context) {
+                //     return DeleteConfirmation();
+                //   },
+                // ),
               ),
             ],
           ),
