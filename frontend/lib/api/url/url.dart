@@ -1,6 +1,6 @@
 class Url {
-    // String baseUrl = "https://current-utilization.vercel.app/api";
-  String baseUrl = "http://192.168.119.24:3000/";
+
+  String baseUrl = "http://currentmonitor-env.eba-fzuv2yhn.ap-south-1.elasticbeanstalk.com/";
 
   String login = "api/auth/login";
   String signup = "api/auth/signup";
