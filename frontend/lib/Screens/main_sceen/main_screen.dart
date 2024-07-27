@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:double_back_to_close_app/double_back_to_close_app.dart';
 import 'package:flutter/material.dart';
 import 'package:saron/Screens/device_screen/device_screen.dart';
@@ -10,12 +8,10 @@ import 'package:saron/Screens/usage_screen/usage_screen.dart';
 import 'package:saron/Screens/watertank_screen/watertank_screen.dart';
 import 'package:saron/api/device_model/device.dart';
 import 'package:saron/api/load_data/load_devices.dart';
-import 'package:saron/main.dart';
 import 'package:saron/socket/socket.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class MainScreen extends StatelessWidget {
-  final ValueNotifier<int> selectedBottomIndex = ValueNotifier(3);
+  final ValueNotifier<int> selectedBottomIndex = ValueNotifier(0);
 
   final SocketManager socketManager = SocketManager();
 
@@ -25,11 +21,11 @@ class MainScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    WidgetsBinding.instance!.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       List<Device> deviceList = await loadDeviceList();
 
       List<int> deviceIds =
-          deviceList.map((device) => device.deviceId!).toList();
+          deviceList.map((device) => device.deviceId).toList();
       socketManager.emitEvent('setDevices', deviceIds);
     });
 
