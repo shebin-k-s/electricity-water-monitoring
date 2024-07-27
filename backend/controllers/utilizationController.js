@@ -1,47 +1,57 @@
-import mongoose from 'mongoose';
 import Utilization from '../models/utilizationModel.js'
 import moment from 'moment-timezone';
 import Device from '../models/deviceModel.js';
 
+
 export const fetchUnitConsumed = async (req, res) => {
-
     const { startDate, endDate, deviceId } = req.query;
-    console.log(req.query);
-    
-    const startDateUTC = moment(startDate).utc().toDate();
-    const endDateUTC = moment(endDate).utc().toDate();
-
-    const endOfDate = new Date(endDateUTC);
-    endOfDate.setHours(23, 59, 59, 999);
-
+console.log(req.query);
     try {
-        const deviceObjectId = await Device
-            .findOne({ deviceId })
-            .select('_id')
+        const device = await Device.findOne({ deviceId }).select('_id');
+        if (!device) {
+            return res.status(404).json({ message: "Device not found" });
+        }
 
-        const utilizationData = await Utilization
-            .find({
-                deviceId: deviceObjectId,
-                startDate: { $gte: startDateUTC, $lte: endOfDate }
-            })
-            .select('unitConsumed')
+        const start = moment(startDate).startOf('day');
+        const end = moment(endDate).endOf('day');
+        const today = moment().endOf('day');
 
-        let totalUnitConsumed = 0;
-        utilizationData.forEach(data => {
-            totalUnitConsumed += data.unitConsumed;
-        });
+        const queryEnd = moment.min(end, today);
 
-        console.log(totalUnitConsumed);
+        const utilizations = await Utilization.aggregate([
+            {
+                $match: {
+                    deviceId: device._id,
+                    startDate: { $gte: start.toDate(), $lte: queryEnd.toDate() }
+                }
+            },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$startDate" } },
+                    unitConsumed: { $sum: "$unitConsumed" }
+                }
+            },
+            {
+                $match: { unitConsumed: { $gt: 0 } }
+            },
+            {
+                $sort: { _id: 1 }
+            }
+        ]);
 
-        return res.status(200).json({ totalUnitConsumed })
-    }
-    catch (error) {
+        const dailyConsumption = utilizations.map(u => ({
+            date: u._id,
+            unitConsumed: u.unitConsumed
+        }));
+
+        const totalUnitConsumed = dailyConsumption.reduce((sum, day) => sum + day.unitConsumed, 0);
+
+        return res.status(200).json({ dailyConsumption, totalUnitConsumed });
+    } catch (error) {
         console.error('Error fetching unit consumed:', error);
-        return res.status(500).json({ message: "Internal server error" })
-
+        return res.status(500).json({ message: "Internal server error" });
     }
 }
-
 export const fetchUtilization = async (req, res) => {
 
     const { startDate, endDate, deviceId } = req.query;
