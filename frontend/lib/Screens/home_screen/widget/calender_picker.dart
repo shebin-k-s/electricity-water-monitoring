@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:saron/Screens/home_screen/widget/CalenderBottomSheet.dart';
-import 'package:saron/api/daily_consumption_model/daily_consumption.dart';
 import 'package:saron/api/daily_consumption_model/daily_consumption_model.dart';
 import 'package:saron/api/data/utilization.dart';
 import 'package:saron/widgets/custom_button/custom_button.dart';
@@ -14,8 +13,8 @@ class CalendarPicker extends StatelessWidget {
   final DateTime? initialStartDate;
   final DateTime? initialEndDate;
 
-   ValueNotifier<DateTime?> startDate = ValueNotifier(DateTime(2024-02-20));
-   ValueNotifier<DateTime?> endDate = ValueNotifier(DateTime.now());
+  ValueNotifier<DateTime?> startDate = ValueNotifier(null);
+  ValueNotifier<DateTime?> endDate = ValueNotifier(null);
 
   CalendarPicker({
     super.key,
@@ -25,10 +24,8 @@ class CalendarPicker extends StatelessWidget {
     required this.onError,
     required this.initialStartDate,
     required this.initialEndDate,
-  }) 
-  //  : startDate = ValueNotifier<DateTime?>(initialStartDate),
-  //       endDate = ValueNotifier<DateTime?>(initialEndDate)
-        ;
+  })  : startDate = ValueNotifier<DateTime?>(initialStartDate),
+        endDate = ValueNotifier<DateTime?>(initialEndDate);
 
   Future<void> _selectStartDate(BuildContext context) async {
     CalendarBottomSheet(
@@ -100,12 +97,12 @@ class CalendarPicker extends StatelessWidget {
 
   Future<void> fetchData(BuildContext context) async {
     if (startDate.value == null || endDate.value == null) {
-      _showSnackbar(context, 'Please select both start and end dates');
+      snackbarMessage(context, 'Please select both start and end dates');
       return;
     }
 
     if (startDate.value!.isAfter(endDate.value!)) {
-      _showSnackbar(context, 'Start date must be before or equal to end date');
+      snackbarMessage(context, 'Start date must be before or equal to end date');
       return;
     }
 
