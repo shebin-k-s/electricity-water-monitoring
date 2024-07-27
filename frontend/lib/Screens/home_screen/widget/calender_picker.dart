@@ -1,19 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:saron/Screens/home_screen/widget/CalenderBottomSheet.dart';
+import 'package:saron/api/daily_consumption_model/daily_consumption.dart';
+import 'package:saron/api/daily_consumption_model/daily_consumption_model.dart';
 import 'package:saron/api/data/utilization.dart';
 import 'package:saron/widgets/custom_button/custom_button.dart';
 import 'package:saron/widgets/snackbar_message/snackbar_message.dart';
 
 class CalendarPicker extends StatelessWidget {
-  final Function(double, DateTime, DateTime) onDateChange;
+  final Function(DailyConsumptionModel, DateTime, DateTime) onDateChange;
   final Function(bool) isLoading;
   final Function(bool) onError;
   final int deviceId;
   final DateTime? initialStartDate;
   final DateTime? initialEndDate;
 
-  final ValueNotifier<DateTime?> startDate;
-  final ValueNotifier<DateTime?> endDate;
+   ValueNotifier<DateTime?> startDate = ValueNotifier(DateTime(2024-02-20));
+   ValueNotifier<DateTime?> endDate = ValueNotifier(DateTime.now());
 
   CalendarPicker({
     super.key,
@@ -23,8 +25,10 @@ class CalendarPicker extends StatelessWidget {
     required this.onError,
     required this.initialStartDate,
     required this.initialEndDate,
-  })  : startDate = ValueNotifier<DateTime?>(initialStartDate),
-        endDate = ValueNotifier<DateTime?>(initialEndDate);
+  }) 
+  //  : startDate = ValueNotifier<DateTime?>(initialStartDate),
+  //       endDate = ValueNotifier<DateTime?>(initialEndDate)
+        ;
 
   Future<void> _selectStartDate(BuildContext context) async {
     CalendarBottomSheet(
@@ -94,29 +98,41 @@ class CalendarPicker extends StatelessWidget {
     );
   }
 
-  void fetchData(BuildContext ctx) async {
-    if (startDate.value != null &&
-        endDate.value != null &&
-        (startDate.value!.isBefore(endDate.value!) ||
-            startDate.value!.isAtSameMomentAs(endDate.value!))) {
-      isLoading(true);
-      UtilizationDB utilizationDB = UtilizationDB();
-      try {
-        double unitConsumed = await utilizationDB.unitConsumed(
-            startDate.value.toString(), endDate.value.toString(), deviceId);
+  Future<void> fetchData(BuildContext context) async {
+    if (startDate.value == null || endDate.value == null) {
+      _showSnackbar(context, 'Please select both start and end dates');
+      return;
+    }
 
-        if (unitConsumed < 0) {
-          onError(true);
-        } else {
-          onDateChange(unitConsumed, startDate.value!, endDate.value!);
-        }
-      } catch (e) {
+    if (startDate.value!.isAfter(endDate.value!)) {
+      _showSnackbar(context, 'Start date must be before or equal to end date');
+      return;
+    }
+
+    isLoading(true);
+    try {
+      DailyConsumptionModel? dailyConsumption =
+          await UtilizationDB().unitConsumed(
+        startDate.value.toString(),
+        endDate.value.toString(),
+        deviceId,
+      );
+      if (dailyConsumption == null) {
         onError(true);
-      } finally {
-        isLoading(false);
+      } else {
+        onDateChange(dailyConsumption, startDate.value!, endDate.value!);
       }
-    } else {
-      snackbarMessage(ctx, 'Select Proper Date');
+    } catch (e) {
+      onError(true);
+      _showSnackbar(context, 'Error fetching data: ${e.toString()}');
+    } finally {
+      isLoading(false);
     }
   }
+}
+
+void _showSnackbar(BuildContext context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text(message)),
+  );
 }
