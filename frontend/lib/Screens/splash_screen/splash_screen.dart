@@ -12,37 +12,67 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
   @override
   void initState() {
-    UserLoggedIn();
     super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutBack,
+    );
+    
+    _animationController.forward();
+    UserLoggedIn();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       body: Center(
-        child: Image.asset("assets/images/saron.png"),
+        child: AnimatedBuilder(
+          animation: _animation,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: _animation.value,
+              child: Image.asset(
+                "assets/images/saron.png",
+              ),
+            );
+          },
+        ),
       ),
     );
   }
 
   void UserLoggedIn() async {
-    final _sharedPref = await SharedPreferences.getInstance();
-    final _userLoggedIn = _sharedPref.getString(TOKEN);
+    final sharedPref = await SharedPreferences.getInstance();
+    final userLoggedIn = sharedPref.getString(TOKEN);
 
-    if (_userLoggedIn == null ) {
-      await Future.delayed(Duration(milliseconds: 3000));
+    await Future.delayed(const Duration(milliseconds: 1000));
+
+    if (userLoggedIn == null) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (ctx) => AuthScreen(),
         ),
       );
     } else {
-      DeviceDB().getDevices();
-      await Future.delayed(Duration(milliseconds: 3000));
-
+      await DeviceDB().getDevices();
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (ctx) => MainScreen(),
