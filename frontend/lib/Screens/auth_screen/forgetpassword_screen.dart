@@ -231,7 +231,7 @@ class ForgetPasswordScreen extends StatelessWidget {
         }
       }
 
-      snackbarMessage(context, errorMessage);
+      snackbarMessage(context, errorMessage, false);
       _isLoading.value = false;
     }
   }

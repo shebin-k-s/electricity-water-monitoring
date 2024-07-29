@@ -273,10 +273,10 @@ class _AddDeviceState extends State<AddDevice> {
       if (statusCode == 200) {
         await DeviceDB().getDevices();
         Navigator.of(context).pop(true);
-        snackbarMessage(context, "Device added successfully");
+        snackbarMessage(context, "Device added successfully", true);
       } else if (statusCode == 400) {
         Navigator.of(context).pop(false);
-        snackbarMessage(context, "Device already added to the user");
+        snackbarMessage(context, "Device already added to the user", false);
       } else if (statusCode == 204) {
         _errorMessage.value = "Device not found";
       } else if (statusCode == 404) {

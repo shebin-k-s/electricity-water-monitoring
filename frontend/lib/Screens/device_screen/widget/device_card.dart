@@ -183,7 +183,7 @@ class DeviceCard extends StatelessWidget {
                     _deviceName.value = deviceNameController.text;
                     Navigator.of(context).pop();
                     snackbarMessage(
-                        context, "Device name updated successfully");
+                        context, "Device name updated successfully", true);
                   }
                 }
               },

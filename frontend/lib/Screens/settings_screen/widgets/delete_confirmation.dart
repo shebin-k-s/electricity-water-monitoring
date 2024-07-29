@@ -264,7 +264,7 @@ class DeleteConfirmation {
                           (route) => false,
                         );
                         snackbarMessage(
-                            context, "Account Deleted Successfully");
+                            context, "Account Deleted Successfully", true);
                       } else if (statusCode == 401) {
                         errorMessage.value = "Incorrect password";
                       } else if (statusCode == 404) {

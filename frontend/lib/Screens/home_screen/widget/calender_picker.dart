@@ -97,12 +97,13 @@ class CalendarPicker extends StatelessWidget {
 
   Future<void> fetchData(BuildContext context) async {
     if (startDate.value == null || endDate.value == null) {
-      snackbarMessage(context, 'Please select both start and end dates');
+      snackbarMessage(context, 'Please select both start and end dates', false);
       return;
     }
 
     if (startDate.value!.isAfter(endDate.value!)) {
-      snackbarMessage(context, 'Start date must be before or equal to end date');
+      snackbarMessage(
+          context, 'Start date must be before or equal to end date', false);
       return;
     }
 
@@ -121,10 +122,9 @@ class CalendarPicker extends StatelessWidget {
       }
     } catch (e) {
       onError(true);
-      snackbarMessage(context, 'Error fetching data: ${e.toString()}');
+      snackbarMessage(context, 'Error fetching data: ${e.toString()}', false);
     } finally {
       isLoading(false);
     }
   }
 }
-

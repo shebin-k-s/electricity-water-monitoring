@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-void snackbarMessage(BuildContext ctx, String message, {bool isSuccess = true}) {
+void snackbarMessage(BuildContext ctx, String message,  isSuccess) {
   ScaffoldMessenger.of(ctx).showSnackBar(
     SnackBar(
       behavior: SnackBarBehavior.floating,

@@ -187,6 +187,8 @@ class AuthScreen extends StatelessWidget {
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
+      textInputAction:
+          keyboardType != null ? TextInputAction.next : TextInputAction.done,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         labelText: label,
@@ -226,6 +228,7 @@ class AuthScreen extends StatelessWidget {
   }
 
   void login(BuildContext context) async {
+    FocusScope.of(context).unfocus();
     if (_formKey.currentState!.validate()) {
       _isLoading.value = true;
       final email = _emailController.text;
@@ -265,7 +268,7 @@ class AuthScreen extends StatelessWidget {
         }
       }
 
-      snackbarMessage(context, errorMessage);
+      snackbarMessage(context, errorMessage, false);
       _isLoading.value = false;
     }
   }
