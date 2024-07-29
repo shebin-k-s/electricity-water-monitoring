@@ -97,7 +97,7 @@ class CalendarPicker extends StatelessWidget {
 
   Future<void> fetchData(BuildContext context) async {
     if (startDate.value == null || endDate.value == null) {
-      snackbarMessage(context, 'Please select both start and end dates', false);
+      snackbarMessage(context, 'Please select both start and end date', false);
       return;
     }
 
