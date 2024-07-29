@@ -71,7 +71,7 @@ class AccountDetailsScreen extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8.0),
-                color: Color.fromARGB(255, 81, 53, 53),
+                color: const Color.fromARGB(255, 81, 53, 53),
               ),
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -94,18 +94,18 @@ class AccountDetailsTile extends StatelessWidget {
   final String value;
 
   const AccountDetailsTile({
-    Key? key,
+    super.key,
     required this.icon,
     required this.label,
     required this.value,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8.0),
-        color: Color.fromARGB(255, 81, 53, 53),
+        color: const Color.fromARGB(255, 81, 53, 53),
       ),
       padding: const EdgeInsets.all(16.0),
       child: Row(
@@ -140,9 +140,9 @@ class DeviceTile extends StatelessWidget {
   final Device device;
 
   const DeviceTile({
-    Key? key,
+    super.key,
     required this.device,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -150,19 +150,19 @@ class DeviceTile extends StatelessWidget {
       margin: const EdgeInsets.only(top: 8.0),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8.0),
-        color: Color.fromARGB(255, 87, 58, 58),
+        color: const Color.fromARGB(255, 87, 58, 58),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.2),
             blurRadius: 8.0,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       padding: const EdgeInsets.all(16.0),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.devices,
             color: Colors.white,
           ),
@@ -180,7 +180,7 @@ class DeviceTile extends StatelessWidget {
                 ),
                 const SizedBox(height: 4.0),
                 Text(
-                  'Device ID: ${device.deviceId ?? 'N/A'}',
+                  'Device ID: ${device.deviceId}',
                   style: const TextStyle(color: Colors.white),
                 ),
               ],

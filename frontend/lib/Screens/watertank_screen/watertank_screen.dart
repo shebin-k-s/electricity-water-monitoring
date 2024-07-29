@@ -278,8 +278,8 @@ class TankPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final double borderWidth = 4.0;
-    final double cornerRadius = 20.0;
+    const double borderWidth = 4.0;
+    const double cornerRadius = 20.0;
 
     // Draw tank background
     final bgPaint = Paint()
@@ -321,8 +321,8 @@ class TankPainter extends CustomPainter {
     waterPath.moveTo(0, size.height);
 
     // Create continuous floating effect
-    final waveHeight = 4.0;
-    final waveCount = 2;
+    const waveHeight = 4.0;
+    const waveCount = 2;
     for (var i = 0; i <= size.width + 10; i++) {
       final x = i.toDouble();
       final normalizedX = x / size.width;

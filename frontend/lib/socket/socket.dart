@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:saron/api/load_data/load_devices.dart';
 import 'package:saron/api/url/url.dart';
 import 'package:saron/main.dart';
@@ -30,8 +28,6 @@ class SocketManager {
 
           final int index =
               devices.indexWhere((device) => device.deviceId == deviceId);
-          print(index);
-
           if (index != -1) {
             devices[index].deviceOn = deviceOn;
 
@@ -49,8 +45,6 @@ class SocketManager {
     );
     setTankStatusListener(
       (data) async {
-                print(data);
-
         if (data != null && data['deviceId'] != null) {
           int deviceId = data['deviceId'];
           bool? tankHigh = data['tankHigh'];

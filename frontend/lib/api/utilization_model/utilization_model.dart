@@ -4,7 +4,6 @@ part 'utilization_model.g.dart';
 
 @JsonSerializable()
 class UtilizationModel {
-
   @JsonKey(name: 'deviceName')
   String? deviceName;
 
@@ -17,19 +16,14 @@ class UtilizationModel {
   @JsonKey(name: 'unitConsumed')
   double? unitConsumed;
 
-  UtilizationModel({
-    this.startDate,
-    this.endDate,
-    this.unitConsumed,
-    this.deviceName
-  });
+  UtilizationModel(
+      {this.startDate, this.endDate, this.unitConsumed, this.deviceName});
 
-  UtilizationModel.create({
-    required this.startDate,
-    required this.endDate,
-    required this.unitConsumed,
-    required this.deviceName
-  });
+  UtilizationModel.create(
+      {required this.startDate,
+      required this.endDate,
+      required this.unitConsumed,
+      required this.deviceName});
 
   factory UtilizationModel.fromJson(Map<String, dynamic> json) {
     return _$UtilizationModelFromJson(json);

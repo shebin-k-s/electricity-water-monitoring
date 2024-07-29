@@ -121,15 +121,10 @@ class CalendarPicker extends StatelessWidget {
       }
     } catch (e) {
       onError(true);
-      _showSnackbar(context, 'Error fetching data: ${e.toString()}');
+      snackbarMessage(context, 'Error fetching data: ${e.toString()}');
     } finally {
       isLoading(false);
     }
   }
 }
 
-void _showSnackbar(BuildContext context, String message) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(message)),
-  );
-}

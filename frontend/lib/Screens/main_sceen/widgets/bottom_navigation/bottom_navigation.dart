@@ -45,7 +45,7 @@ class BottomNavigation extends StatelessWidget {
         selectedFontSize: 12,
         onTap: (value) => onItemTapped(value),
         type: BottomNavigationBarType.fixed,
-        items:  [
+        items: [
           const BottomNavigationBarItem(
             label: "HOME",
             icon: Icon(Icons.home),

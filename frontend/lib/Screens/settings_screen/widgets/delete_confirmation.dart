@@ -7,9 +7,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class DeleteConfirmation {
   static void show(BuildContext context) {
-    final _passwordController = TextEditingController();
-    final _formKey = GlobalKey<FormState>();
-    final ValueNotifier<String> _errorMessage = ValueNotifier("");
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    final ValueNotifier<String> errorMessage = ValueNotifier("");
+    final ValueNotifier<bool> isLoading = ValueNotifier(false);
+    final FocusNode passwordFocusNode = FocusNode();
 
     showModalBottomSheet(
       context: context,
@@ -32,7 +34,13 @@ class DeleteConfirmation {
                 Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: _buildForm(
-                      context, _passwordController, _formKey, _errorMessage),
+                    context,
+                    passwordFocusNode,
+                    passwordController,
+                    formKey,
+                    errorMessage,
+                    isLoading,
+                  ),
                 ),
               ],
             ),
@@ -78,9 +86,11 @@ class DeleteConfirmation {
 
   static Widget _buildForm(
       BuildContext context,
+      FocusNode passwordFocusNode,
       TextEditingController passwordController,
       GlobalKey<FormState> formKey,
-      ValueNotifier<String> errorMessage) {
+      ValueNotifier<String> errorMessage,
+      ValueNotifier<bool> isLoading) {
     return Form(
       key: formKey,
       child: Column(
@@ -91,12 +101,18 @@ class DeleteConfirmation {
             controller: passwordController,
             label: 'Password',
             icon: Icons.lock,
-            focusNode: FocusNode(),
+            focusNode: passwordFocusNode,
           ),
           const SizedBox(height: 16),
           _buildErrorMessage(errorMessage),
           const SizedBox(height: 24),
-          _buildButtons(context, passwordController, formKey, errorMessage),
+          _buildButtons(
+            context,
+            passwordController,
+            formKey,
+            errorMessage,
+            isLoading,
+          ),
         ],
       ),
     );
@@ -123,7 +139,7 @@ class DeleteConfirmation {
       child: TextFormField(
         controller: controller,
         focusNode: focusNode,
-        textInputAction: TextInputAction.next,
+        textInputAction: TextInputAction.done,
         obscureText: label == 'Password',
         style: const TextStyle(color: Colors.black87, fontSize: 16),
         decoration: InputDecoration(
@@ -190,75 +206,97 @@ class DeleteConfirmation {
     TextEditingController passwordController,
     GlobalKey<FormState> formKey,
     ValueNotifier<String> errorMessage,
+    ValueNotifier<bool> isLoading,
   ) {
-    return Row(
-      children: [
-        Expanded(
-          child: TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: TextButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
+    return ValueListenableBuilder(
+      valueListenable: isLoading,
+      builder: (context, value, child) {
+        if (value) {
+          return const Center(
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: CircularProgressIndicator(),
             ),
-            child: const Text(
-              'Cancel',
-              style: TextStyle(
-                color: Color(0xFF6A1B9A),
-                fontSize: 16,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: () async {
-              if (formKey.currentState!.validate()) {
-                final statusCode =
-                    await AuthDB().deleteAccount(passwordController.text);
-                if (statusCode == 200) {
-                  final SharedPreferences _sharedPref =
-                      await SharedPreferences.getInstance();
-                  await _sharedPref.remove(TOKEN);
-                  await _sharedPref.remove(EMAIL);
-                  await _sharedPref.remove(USERNAME);
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(
-                      builder: (ctx) => AuthScreen(),
+          );
+        } else {
+          return Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    (route) => false,
-                  );
-                  snackbarMessage(context, "Account Deleted Successfully");
-                } else if (statusCode == 401) {
-                  errorMessage.value = "Incorrect password";
-                } else if (statusCode == 404) {
-                  errorMessage.value = "User not found";
-                } else {
-                  errorMessage.value = "Internal server error";
-                }
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF6A1B9A),
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: Color(0xFF6A1B9A),
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
               ),
-            ),
-            child: const Text(
-              'Delete',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    if (formKey.currentState!.validate()) {
+                      FocusScope.of(context).unfocus();
+
+                      errorMessage.value = "";
+                      isLoading.value = true;
+                      final statusCode =
+                          await AuthDB().deleteAccount(passwordController.text);
+                      if (statusCode == 200) {
+                        final SharedPreferences sharedPref =
+                            await SharedPreferences.getInstance();
+                        await sharedPref.remove(TOKEN);
+                        await sharedPref.remove(EMAIL);
+                        await sharedPref.remove(USERNAME);
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (ctx) => AuthScreen(),
+                          ),
+                          (route) => false,
+                        );
+                        snackbarMessage(
+                            context, "Account Deleted Successfully");
+                      } else if (statusCode == 401) {
+                        errorMessage.value = "Incorrect password";
+                      } else if (statusCode == 404) {
+                        errorMessage.value = "User not found";
+                      } else {
+                        errorMessage.value = "Internal server error";
+                      }
+                      isLoading.value = false;
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF6A1B9A),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Delete',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
               ),
-            ),
-          ),
-        ),
-      ],
+            ],
+          );
+        }
+      },
     );
   }
 }

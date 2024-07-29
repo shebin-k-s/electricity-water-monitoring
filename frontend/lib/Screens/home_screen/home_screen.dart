@@ -171,7 +171,6 @@ class HomeScreen extends StatelessWidget {
               valueListenable: _error,
               builder: (context, error, _) {
                 if (dailyConsumption != null && !isLoading && !error) {
-                  print("cjcc${dailyConsumption.totalUnitConsumed}");
                   return _buildConsumptionList(dailyConsumption);
                 } else if (isLoading) {
                   return const Expanded(

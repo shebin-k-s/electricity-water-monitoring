@@ -206,13 +206,12 @@ class _AddDeviceState extends State<AddDevice> {
   Widget _buildButtons(BuildContext context) {
     return isLoading
         ? const Center(
-          child: SizedBox(
-              width: 50,
-              height: 50,
-              child: CircularProgressIndicator(
-              ),
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: CircularProgressIndicator(),
             ),
-        )
+          )
         : Row(
             children: [
               Expanded(
@@ -265,6 +264,7 @@ class _AddDeviceState extends State<AddDevice> {
       setState(() {
         isLoading = true;
       });
+      _errorMessage.value = "";
 
       String serialNumber = serialNumberController.text;
       String deviceId = deviceIdController.text;

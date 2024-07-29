@@ -91,7 +91,7 @@ class UtilizationDB extends ApiCalls {
       }
     } catch (e) {
       if (e is DioException && e.response != null) {
-        return null;
+        rethrow;
       }
     }
     return null;
