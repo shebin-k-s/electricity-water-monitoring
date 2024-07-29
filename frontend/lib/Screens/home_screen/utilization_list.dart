@@ -4,101 +4,187 @@ import 'package:saron/api/data/utilization.dart';
 import 'package:saron/api/utilization_model/utilization_model.dart';
 import 'package:intl/intl.dart';
 
-// ignore: must_be_immutable
 class UtilizationList extends StatelessWidget {
   final ValueNotifier<List<UtilizationModel>> utilizationList =
       ValueNotifier([]);
   final ValueNotifier<bool> _isLoading = ValueNotifier(false);
   final DateTime date;
   final int deviceId;
-  String imageUrl = "assets/images/no_data.png";
-  String message =
-      "Excellent! Today's usage is nil,\nsaving energy effectively.";
+  final double totalUnits;
 
   UtilizationList({
-    super.key,
+    Key? key,
     required this.date,
     required this.deviceId,
-  });
+    required this.totalUnits,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final formattedDate = DateFormat('dd-MM-yyyy').format(date);
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) async {
-        utilizationList.value.clear();
-        _isLoading.value = true;
-        final _data = await UtilizationDB().history(
-          date.toString(),
-          date.toString(),
-          deviceId,
-        );
+    final formattedDate = DateFormat('MMMM d, yyyy').format(date);
 
-        if (_data.statusCode == 200) {
-          utilizationList.value = _data.utilization;
-        } else {
-          imageUrl = "assets/images/network_error.png";
-          message = "Could not send request";
-        }
-        _isLoading.value = false;
-      },
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _loadData();
+    });
+
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          formattedDate.toString(),
+      backgroundColor: Colors.black,
+      body: ValueListenableBuilder(
+        valueListenable: _isLoading,
+        builder: (context, bool isLoading, child) {
+          return CustomScrollView(
+            slivers: [
+              _buildSliverAppBar(formattedDate),
+              if (isLoading)
+                const SliverFillRemaining(
+                  child: Center(
+                      child:
+                          CircularProgressIndicator(color: Colors.tealAccent)),
+                )
+              else if (utilizationList.value.isEmpty)
+                _buildEmptyState()
+              else
+                _buildUtilizationList(),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  SliverAppBar _buildSliverAppBar(String formattedDate) {
+    return SliverAppBar(
+      expandedHeight: 120,
+      pinned: true,
+      backgroundColor: Colors.black,
+      flexibleSpace: FlexibleSpaceBar(
+        background: Container(
+          decoration: const BoxDecoration(
+            color: Colors.black,
+          ),
+        ),
+        title: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.grey[900],
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.grey[800]!),
+          ),
+          child: Text(
+            formattedDate,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ),
-      body: SafeArea(
-          child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: ValueListenableBuilder(
-          valueListenable: _isLoading,
-          builder: (context, value, child) {
-            if (!value && utilizationList.value.isNotEmpty) {
-              return ListView.builder(
-                itemBuilder: (context, index) {
-                  final _utilization = utilizationList.value[index];
-
-                  return UsageCard(
-                    deviceName: _utilization.deviceName!,
-                    startTime: getTime(_utilization.startDate!),
-                    endTime: getTime(_utilization.endDate!),
-                    unitConsumed: _utilization.unitConsumed!.toString(),
-                    duration: timeUsed(
-                        _utilization.startDate!, _utilization.endDate!),
-                  );
-                },
-                itemCount: utilizationList.value.length,
-              );
-            } else if (value) {
-              return const Center(child: CircularProgressIndicator());
-            } else {
-              return Container(
-                width: double.infinity,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      imageUrl,
-                    ),
-                    Text(
-                      message,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  ],
-                ),
-              );
-            }
-          },
-        ),
-      )),
     );
+  }
+
+  SliverList _buildUtilizationList() {
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          if (index == 0) {
+            return _buildSummaryCard();
+          }
+          final utilization = utilizationList.value[index - 1];
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: UsageCard(
+              deviceName: utilization.deviceName!,
+              startTime: getTime(utilization.startDate!),
+              endTime: getTime(utilization.endDate!),
+              unitConsumed: utilization.unitConsumed!.toString(),
+              duration: timeUsed(utilization.startDate!, utilization.endDate!),
+            ),
+          );
+        },
+        childCount: utilizationList.value.length + 1,
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard() {
+    return Card(
+      margin: const EdgeInsets.all(16),
+      elevation: 4,
+      color: Colors.grey[900],
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Daily Summary',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Total Units Consumed: ${totalUnits} units',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+            Text(
+              'Number of Usages: ${utilizationList.value.length}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  SliverFillRemaining _buildEmptyState() {
+    return SliverFillRemaining(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset(
+              'assets/images/no_data.png',
+              width: 200,
+              height: 200,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "Excellent! Today's usage is nil,\nsaving energy effectively.",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _loadData() async {
+    utilizationList.value.clear();
+    _isLoading.value = true;
+    final data = await UtilizationDB().history(
+      date.toString(),
+      date.toString(),
+      deviceId,
+    );
+
+    if (data.statusCode == 200) {
+      utilizationList.value = data.utilization;
+    }
+    _isLoading.value = false;
   }
 
   String getTime(String date) {
