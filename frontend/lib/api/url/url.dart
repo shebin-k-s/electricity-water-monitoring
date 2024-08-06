@@ -1,5 +1,5 @@
 class Url {
-  String baseUrl = "http://currentmonitor-env.eba-fzuv2yhn.ap-south-1.elasticbeanstalk.com/";
+  String baseUrl = "https://electricity-water-monitoring.onrender.com/";
 
   String login = "api/auth/login";
   String signup = "api/auth/signup";
